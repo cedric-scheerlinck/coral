@@ -1,43 +1,38 @@
 import torch
 import torch.nn as nn
 
+from network.blocks import DownResBlock
+from network.blocks import UpResBlock
+
 
 class UNet(nn.Module):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
-        self.encoder = nn.Sequential(
-            self.conv_block(3, 64),
-            self.conv_block(64, 128),
-            self.conv_block(128, 256),
-            self.conv_block(256, 512),
+        self.down_blocks = nn.ModuleList(
+            [
+                DownResBlock(3, 64),
+                DownResBlock(64, 128),
+                DownResBlock(128, 256),
+                DownResBlock(256, 512),
+            ]
         )
-        self.decoder = nn.Sequential(
-            self.upconv_block(512, 256),
-            self.upconv_block(256, 128),
-            self.upconv_block(128, 64),
-            nn.Conv2d(64, 1, kernel_size=1),
+        self.up_blocks = nn.ModuleList(
+            [
+                UpResBlock(512, 256),
+                UpResBlock(256, 128),
+            ]
         )
+        self.coral_head = nn.Conv2d(128, 1, kernel_size=3, padding=1)
 
-    def conv_block(self, in_channels, out_channels):
-        return nn.Sequential(
-            nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1),
-            nn.BatchNorm2d(out_channels),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1),
-            nn.BatchNorm2d(out_channels),
-            nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=2, stride=2),
-        )
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        skips = []
+        for i, down_block in enumerate(self.down_blocks):
+            x = down_block(x)
+            if i < len(self.down_blocks) - 1:
+                skips.append(x)
 
-    def upconv_block(self, in_channels, out_channels):
-        return nn.Sequential(
-            nn.ConvTranspose2d(in_channels, out_channels, kernel_size=2, stride=2),
-            nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1),
-            nn.BatchNorm2d(out_channels),
-            nn.ReLU(inplace=True),
-        )
+        for up_block, skip in zip(self.up_blocks, skips[::-1]):
+            x = up_block(x)
+            x = x + skip
 
-    def forward(self, x):
-        features = self.encoder(x)
-        output = self.decoder(features)
-        return torch.sigmoid(output)
+        return self.coral_head(x)
