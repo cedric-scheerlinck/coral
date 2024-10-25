@@ -8,6 +8,8 @@ import cv2
 import torch
 from torch.utils.data import Dataset
 
+from dataset.util import get_sample_paths
+
 BASE_DIR = Path("/media/cedric/Storage1/coral_data/dataset")
 
 
@@ -28,18 +30,7 @@ class CoralDataset(Dataset):
     def __init__(self, dataset_dir: Path = BASE_DIR) -> None:
         self.dataset_dir = dataset_dir
         assert dataset_dir.is_dir(), "Dataset directory does not exist"
-        meta_file = dataset_dir / "meta.txt"
-        if meta_file.is_file():
-            with open(meta_file, "r") as f:
-                self.sample_paths = [
-                    dataset_dir / line.strip() for line in f.readlines()
-                ]
-        else:
-            self.sample_paths = sorted(dataset_dir.glob("**/*.png"))
-            # write to meta.txt
-            with open(meta_file, "w") as f:
-                for path in self.sample_paths:
-                    f.write(f"{path.relative_to(dataset_dir)}\n")
+        self.sample_paths = get_sample_paths(dataset_dir)
 
     def __len__(self) -> int:
         return len(self.sample_paths)
