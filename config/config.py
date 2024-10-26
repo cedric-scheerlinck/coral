@@ -13,8 +13,9 @@ class Config:
     data_dir: Pathlike = DATA_DIR
     split: Split = "train"
     output_dir: Pathlike = ""
-    learning_rate: float = 0.001
+    learning_rate: float = 1e-4
+    weight_decay: float = 1e-2
     batch_size: int = 4
     num_epochs: int = 10
     num_workers: int = 4
-    log_every_n_steps: int = 100
+    log_every_n_steps: int = 10

@@ -20,11 +20,30 @@ class CoralModel(pl.LightningModule):
         sample = Sample.from_dict(data_blob)
         predictions = self.network(sample.image)
         loss = self.loss_fn(predictions, sample.mask)
-        self.log("train_loss", loss)
+
+        self.log(
+            "train/loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True
+        )
+        if batch_idx % self.config.log_every_n_steps == 0:
+            self.log_images(sample, predictions, "train")
         return loss
+
+    def log_images(self, sample: Sample, pred: torch.Tensor, split: str) -> None:
+        for i in range(sample.image.shape[0]):
+            self.logger.experiment.add_image(
+                f"{split}_images/image_{i}", sample.image[i], self.global_step
+            )
+            self.logger.experiment.add_image(
+                f"{split}_images/mask_{i}", sample.mask[i], self.global_step
+            )
+            self.logger.experiment.add_image(
+                f"{split}_images/pred_{i}", pred[i], self.global_step
+            )
 
     def configure_optimizers(self) -> torch.optim.Optimizer:
         optimizer = torch.optim.Adam(
-            self.network.parameters(), lr=self.config.learning_rate
+            self.network.parameters(),
+            lr=self.config.learning_rate,
+            weight_decay=self.config.weight_decay,
         )
         return optimizer
