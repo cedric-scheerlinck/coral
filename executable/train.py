@@ -16,6 +16,15 @@ from util.rand_seed import set_random_seed
 set_random_seed()
 
 
+# Create a custom callback to save checkpoints
+class CheckpointEveryEpoch(pl.Callback):
+    def on_train_epoch_end(
+        self, trainer: pl.Trainer, pl_module: pl.LightningModule
+    ) -> None:
+        epoch = trainer.current_epoch
+        trainer.save_checkpoint(f"{trainer.log_dir}/checkpoints/{epoch:04d}.ckpt")
+
+
 def main(config: Config) -> None:
     # Create output directory if it doesn't exist
     output_dir = Path(config.output_dir)
@@ -32,11 +41,15 @@ def main(config: Config) -> None:
     # Initialize model
     model = CoralModel(config)
 
+    # Create the trainer without the checkpoint callback initially
     trainer = pl.Trainer(
         max_epochs=config.num_epochs,
         default_root_dir=config.output_dir,
         log_every_n_steps=config.log_every_n_steps,
     )
+
+    # Add the checkpoint callback to the trainer
+    trainer.callbacks.append(CheckpointEveryEpoch())
 
     # Train the model
     trainer.fit(model, train_loader)

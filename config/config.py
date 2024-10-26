@@ -16,6 +16,6 @@ class Config:
     learning_rate: float = 1e-4
     weight_decay: float = 1e-2
     batch_size: int = 4
-    num_epochs: int = 10
+    num_epochs: int = 100
     num_workers: int = 4
     log_every_n_steps: int = 10

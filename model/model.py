@@ -2,30 +2,57 @@ import pytorch_lightning as pl
 import torch
 from config.config import Config
 from dataset.dataset import Sample
-from loss.loss import CoralLoss
+from loss.loss import BCELoss
+from loss.loss import DiceLoss
 from network.network import UNet
+from util.image_util import resize
 
 
 class CoralModel(pl.LightningModule):
     def __init__(self, config: Config) -> None:
         super().__init__()
         self.network = UNet()
-        self.loss_fn = CoralLoss()
+        self.losses = [BCELoss(), DiceLoss()]
         self.config = config
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.network(x)
 
+    def get_pred(self, sample: Sample) -> torch.Tensor:
+        orig_device = sample.image.device
+        image = sample.image.to(self.device)
+        ndim = image.ndim
+        if ndim == 3:
+            image = image.unsqueeze(0)
+        pred = self.network(image)
+        pred = resize(pred, sample.mask)
+        pred = pred.sigmoid()
+        import streamlit as st
+
+        st.text(pred.shape)
+
+        st.text(pred.min())
+        st.text(pred.max())
+        if ndim == 3:
+            pred = pred.squeeze(0)
+        return pred.to(orig_device).detach()
+
     def training_step(self, data_blob: dict, batch_idx: int) -> torch.Tensor:
         sample = Sample.from_dict(data_blob)
-        predictions = self.network(sample.image)
-        loss = self.loss_fn(predictions, sample.mask)
-
-        self.log(
-            "train/loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True
-        )
+        preds = self.network(sample.image)
+        loss = 0
+        for loss_fn in self.losses:
+            loss += loss_fn(preds, sample.mask)
+            self.log(
+                f"train/{loss_fn.__class__.__name__}",
+                loss,
+                on_step=True,
+                on_epoch=True,
+                prog_bar=True,
+                logger=True,
+            )
         if batch_idx % self.config.log_every_n_steps == 0:
-            self.log_images(sample, predictions, "train")
+            self.log_images(sample, preds.sigmoid(), "train")
         return loss
 
     def log_images(self, sample: Sample, pred: torch.Tensor, split: str) -> None:
