@@ -6,17 +6,16 @@ from typing import Self
 
 import cv2
 import torch
+from config.config import Config
 from torch.utils.data import Dataset
 
 from dataset.util import get_sample_paths
 
-BASE_DIR = Path("/media/cedric/Storage1/coral_data/dataset")
-
 
 @dataclass
 class Sample:
-    image: torch.Tensor  # shape (3, H, W), uint8
-    mask: torch.Tensor  # shape (1, H, W), bool
+    image: torch.Tensor  # shape (3, H, W)
+    mask: torch.Tensor  # shape (1, H, W)
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -27,10 +26,10 @@ class Sample:
 
 
 class CoralDataset(Dataset):
-    def __init__(self, dataset_dir: Path = BASE_DIR) -> None:
-        self.dataset_dir = dataset_dir
-        assert dataset_dir.is_dir(), "Dataset directory does not exist"
-        self.sample_paths = get_sample_paths(dataset_dir)
+    def __init__(self, config: Config) -> None:
+        self.data_dir = Path(config.data_dir) / config.split
+        assert self.data_dir.is_dir(), "Dataset directory does not exist"
+        self.sample_paths = get_sample_paths(self.data_dir)
 
     def __len__(self) -> int:
         return len(self.sample_paths)
@@ -41,6 +40,6 @@ class CoralDataset(Dataset):
         image_np = cv2.cvtColor(image_np, cv2.COLOR_BGRA2RGBA)
         image = torch.from_numpy(image_np).permute(2, 0, 1)
         image, mask = image.split([3, 1], dim=0)
-        mask = ~mask.bool()
+        mask = (~mask.bool()).float()
         image = image.float() / 255.0
         return Sample(image=image, mask=mask).to_dict()

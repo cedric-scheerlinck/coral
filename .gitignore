@@ -4,3 +4,4 @@ T1_22.12.06.tif
 venv/
 .ipynb_checkpoints/
 __pycache__/
+logs/

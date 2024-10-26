@@ -2,14 +2,20 @@ from pathlib import Path
 
 import pytest
 import torch
+from config.config import Config
 from dataset.dataset import CoralDataset
 from dataset.dataset import Sample
 
 
 @pytest.fixture
-def coral_dataset() -> CoralDataset:
+def config() -> Config:
     current_dir = Path(__file__).parent
-    return CoralDataset(dataset_dir=current_dir / "data" / "dataset")
+    return Config(data_dir=current_dir / "data" / "dataset", split="train")
+
+
+@pytest.fixture
+def coral_dataset(config: Config) -> CoralDataset:
+    return CoralDataset(config)
 
 
 def test_coral_dataset_getitem(coral_dataset: CoralDataset) -> None:
@@ -27,7 +33,7 @@ def test_coral_dataset_getitem(coral_dataset: CoralDataset) -> None:
         0 <= sample.image.min() <= sample.image.max() <= 1
     ), "Image values should be in range [0, 1]"
 
-    assert sample.mask.dtype == torch.bool, "Mask should be a boolean tensor"
+    assert sample.mask.dtype == torch.float32, "Mask should be a float tensor"
     assert sample.mask.ndim == 3, "Mask should have 3 dimensions (C, H, W)"
     assert sample.mask.shape[0] == 1, "Mask should have 1 channel"
 
