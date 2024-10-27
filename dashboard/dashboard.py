@@ -14,7 +14,7 @@ st.set_page_config(layout="wide")
 st.title("Coral Dashboard")
 
 
-def get_checkpoint_path(model_path: str) -> T.Optional[Path]:
+def get_checkpoint_path(model_path: str) -> Path | None:
     if not model_path:
         return None
     path = Path(model_path)
@@ -39,14 +39,14 @@ class CoralDashboard:
         self.model_path = ""
         self.col_idx = -1
         self.setting_col_idx = -1
-        self.model: T.Optional[CoralModel] = None
+        self.model: CoralModel | None = None
 
     def run(self) -> None:
         self.settings()
         self.model = self.create_model()
         self.display_samples()
 
-    def create_model(self) -> T.Optional[CoralModel]:
+    def create_model(self) -> CoralModel | None:
         checkpoint_path = get_checkpoint_path(self.model_path)
         if not checkpoint_path:
             return None

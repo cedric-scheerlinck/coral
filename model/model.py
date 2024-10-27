@@ -45,7 +45,7 @@ class CoralModel(pl.LightningModule):
                 prog_bar=True,
                 logger=True,
             )
-        if batch_idx % self.config.log_every_n_steps == 0:
+        if batch_idx % self.config.log_image_every_n_steps == 0:
             self.log_images(sample, preds.sigmoid(), "train")
         return loss
 

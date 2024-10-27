@@ -26,11 +26,12 @@ def target() -> torch.Tensor:
 def test_coral_model(config: Config, image: torch.Tensor, target: torch.Tensor) -> None:
     model = CoralModel(config)
     assert hasattr(model, "network")
-    assert hasattr(model, "loss_fn")
+    assert hasattr(model, "losses")
     assert hasattr(model, "config")
     output = model(image)
-    loss = model.loss_fn(output, target)
-    assert loss.item() > 0
+    assert output.ndim == 4
+    assert output.shape[0] == BATCH_SIZE
+    assert output.shape[1] == 1
 
 
 if __name__ == "__main__":

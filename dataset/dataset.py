@@ -1,4 +1,3 @@
-# import pytorch dataset
 from dataclasses import asdict
 from dataclasses import dataclass
 from pathlib import Path
@@ -30,7 +29,8 @@ class CoralDataset(Dataset):
         self.data_dir = Path(config.data_dir) / config.split
         assert self.data_dir.is_dir(), "Dataset directory does not exist"
         self.sample_paths = get_sample_paths(self.data_dir)
-        self.sample_paths = self.sample_paths[:10]
+        if config.max_num_samples is not None:
+            self.sample_paths = self.sample_paths[: config.max_num_samples]
 
     def __len__(self) -> int:
         return len(self.sample_paths)

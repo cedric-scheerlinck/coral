@@ -40,7 +40,7 @@ def main(config: Config) -> None:
     trainer = pl.Trainer(
         max_epochs=config.num_epochs,
         default_root_dir=config.output_dir,
-        log_every_n_steps=config.log_every_n_steps,
+        log_every_n_steps=config.log_image_every_n_steps,
     )
     trainer.callbacks.append(CheckpointEveryEpoch())
     trainer.fit(model, train_loader)

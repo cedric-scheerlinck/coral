@@ -1,16 +1,12 @@
 import pytest
 import torch
-from loss.loss import CoralLoss
+from loss.loss import BCELoss
+from loss.loss import DiceLoss
 
 BATCH_SIZE = 2
 CHANNELS = 1
 HEIGHT = 32
 WIDTH = 32
-
-
-@pytest.fixture
-def coral_loss() -> CoralLoss:
-    return CoralLoss()
 
 
 @pytest.fixture
@@ -23,15 +19,14 @@ def target() -> torch.Tensor:
     return torch.randint(0, 2, (BATCH_SIZE, CHANNELS, HEIGHT, WIDTH)).float()
 
 
-def test_coral_loss(
-    coral_loss: CoralLoss,
-    pred: torch.Tensor,
-    target: torch.Tensor,
-):
+@pytest.mark.parametrize("loss_class", [BCELoss, DiceLoss])
+def test_loss(loss_class, pred: torch.Tensor, target: torch.Tensor):
+    loss_fn = loss_class()
+
     # Ensure pred requires gradients
     pred.requires_grad_(True)
 
-    loss = coral_loss(pred, target)
+    loss = loss_fn(pred, target)
     assert isinstance(loss.item(), float)
     assert loss.item() >= 0
 
