@@ -7,7 +7,8 @@ from util.image_util import max_pool
 class BCELoss(nn.Module):
     def forward(self, pred: torch.Tensor, gt: torch.Tensor) -> torch.Tensor:
         gt = max_pool(gt, pred)
-        return F.binary_cross_entropy_with_logits(pred, gt)
+        pos_weight = torch.tensor(100.0, device=pred.device)
+        return F.binary_cross_entropy_with_logits(pred, gt, pos_weight=pos_weight)
 
 
 class DiceLoss(nn.Module):

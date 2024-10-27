@@ -36,16 +36,20 @@ class CoralModel(pl.LightningModule):
         preds = self.network(sample.image)
         loss = 0
         for loss_fn in self.losses:
-            loss += loss_fn(preds, sample.mask)
+            loss_val = loss_fn(preds, sample.mask)
+            loss += loss_val
             self.log(
                 f"train/{loss_fn.__class__.__name__}",
-                loss,
+                loss_val,
                 on_step=True,
                 on_epoch=True,
                 prog_bar=True,
                 logger=True,
             )
-        if batch_idx % self.config.log_image_every_n_steps == 0:
+        self.log(
+            "train/loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True
+        )
+        if batch_idx % self.config.log_images_every_n_steps == 0:
             self.log_images(sample, preds.sigmoid(), "train")
         return loss
 

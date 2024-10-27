@@ -15,9 +15,10 @@ class Config:
     max_num_samples: int = -1
 
     output_dir: Pathlike = ""
-    learning_rate: float = 1e-4
-    weight_decay: float = 1e-2
+    learning_rate: float = 1e-5
+    weight_decay: float = 0
     batch_size: int = 4
     num_epochs: int = 100
     num_workers: int = 4
-    log_image_every_n_steps: int = 1000
+    log_every_n_steps: int = 100
+    log_images_every_n_steps: int = 1000

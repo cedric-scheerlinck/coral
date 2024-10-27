@@ -112,7 +112,7 @@ class CoralDashboard:
             cv2.CHAIN_APPROX_SIMPLE,
         )
         image_np = numpy_from_torch(sample.image)
-        cv2.drawContours(image_np, contours, -1, (0, 255, 0), 2)
+        cv2.drawContours(image_np, contours, -1, (0, 255, 0), 1)
         st.image(image_np)
         st.image(mask)
 

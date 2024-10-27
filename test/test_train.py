@@ -15,7 +15,7 @@ def config() -> Config:
         batch_size=1,
         num_epochs=1,
         num_workers=1,
-        log_image_every_n_steps=1,
+        log_every_n_steps=1,
     )
 
 
