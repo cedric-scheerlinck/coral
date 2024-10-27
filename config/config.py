@@ -12,7 +12,7 @@ DATA_DIR = "/media/cedric/Storage1/coral_data/dataset"
 class Config:
     data_dir: Pathlike = DATA_DIR
     split: Split = "train"
-    max_num_samples: int | None = None
+    max_num_samples: int = -1
 
     output_dir: Pathlike = ""
     learning_rate: float = 1e-4

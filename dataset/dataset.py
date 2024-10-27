@@ -29,7 +29,7 @@ class CoralDataset(Dataset):
         self.data_dir = Path(config.data_dir) / config.split
         assert self.data_dir.is_dir(), "Dataset directory does not exist"
         self.sample_paths = get_sample_paths(self.data_dir)
-        if config.max_num_samples is not None:
+        if config.max_num_samples >= 0:
             self.sample_paths = self.sample_paths[: config.max_num_samples]
 
     def __len__(self) -> int:
