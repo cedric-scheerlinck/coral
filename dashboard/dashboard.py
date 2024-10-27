@@ -33,7 +33,7 @@ def get_checkpoint_path(model_path: str) -> Path | None:
 class CoralDashboard:
     def __init__(self):
         self.config = Config()
-        self.dataset = CoralDataset(self.config)
+        self.data_path = ""
         self.num_cols = 18
         self.num_samples = -1
         self.model_path = ""
@@ -72,6 +72,11 @@ class CoralDashboard:
     def settings(self) -> None:
         cols = st.columns(6)
         with cols[self.next_setting_col_idx()]:
+            self.create_param(st.text_input, "data_path")
+            if self.data_path:
+                self.config.data_dir = self.data_path
+        self.dataset = CoralDataset(self.config)
+        with cols[self.next_setting_col_idx()]:
             self.create_param(st.number_input, "num_cols", min_value=1)
         with cols[self.next_setting_col_idx()]:
             self.create_param(
@@ -82,8 +87,8 @@ class CoralDashboard:
             )
             if self.num_samples == -1:
                 self.num_samples = len(self.dataset)
-        with cols[self.next_setting_col_idx()]:
-            self.create_param(st.text_input, "model_path")
+        # with cols[self.next_setting_col_idx()]:
+        self.create_param(st.text_input, "model_path")
 
     def next_setting_col_idx(self) -> int:
         self.setting_col_idx = (self.setting_col_idx + 1) % self.num_cols
@@ -106,6 +111,12 @@ class CoralDashboard:
 
     def display_sample(self, sample: Sample) -> None:
         mask = numpy_from_torch(sample.mask)
+        kernel_size = 41
+        kernel = np.zeros((kernel_size, kernel_size), dtype=np.uint8)
+        cv2.circle(
+            kernel, (kernel_size // 2, kernel_size // 2), kernel_size // 2, 1, -1
+        )
+        mask = cv2.dilate(mask, kernel)
         contours, _ = cv2.findContours(
             (mask.squeeze() > 127).astype(np.uint8),
             cv2.RETR_TREE,
