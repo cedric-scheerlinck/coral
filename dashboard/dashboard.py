@@ -2,6 +2,7 @@ import typing as T
 from pathlib import Path
 
 import cv2
+import numpy as np
 import streamlit as st
 from config.config import Config
 from dataset.dataset import CoralDataset
@@ -64,10 +65,7 @@ class CoralDashboard:
                     self.display_output(sample)
 
     def display_output(self, sample: Sample) -> None:
-        pred = self.model.get_pred(sample)
-        st.text(pred.shape)
-        st.text(pred.min())
-        st.text(pred.max())
+        pred = self.model.get_pred(sample.image)
         sample = Sample(image=sample.image, mask=pred)
         self.display_sample(sample)
 
@@ -109,7 +107,9 @@ class CoralDashboard:
     def display_sample(self, sample: Sample) -> None:
         mask = numpy_from_torch(sample.mask)
         contours, _ = cv2.findContours(
-            mask.squeeze(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE
+            (mask.squeeze() > 127).astype(np.uint8),
+            cv2.RETR_TREE,
+            cv2.CHAIN_APPROX_SIMPLE,
         )
         image_np = numpy_from_torch(sample.image)
         cv2.drawContours(image_np, contours, -1, (0, 255, 0), 2)

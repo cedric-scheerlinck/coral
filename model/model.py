@@ -18,21 +18,15 @@ class CoralModel(pl.LightningModule):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.network(x)
 
-    def get_pred(self, sample: Sample) -> torch.Tensor:
-        orig_device = sample.image.device
-        image = sample.image.to(self.device)
+    def get_pred(self, image: torch.Tensor) -> torch.Tensor:
+        orig_device = image.device
+        image = image.to(self.device)
         ndim = image.ndim
         if ndim == 3:
             image = image.unsqueeze(0)
         pred = self.network(image)
-        pred = resize(pred, sample.mask)
+        pred = resize(pred, image)
         pred = pred.sigmoid()
-        import streamlit as st
-
-        st.text(pred.shape)
-
-        st.text(pred.min())
-        st.text(pred.max())
         if ndim == 3:
             pred = pred.squeeze(0)
         return pred.to(orig_device).detach()
