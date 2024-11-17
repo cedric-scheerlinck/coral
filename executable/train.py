@@ -42,6 +42,7 @@ def main(config: Config) -> None:
         default_root_dir=config.output_dir,
         log_every_n_steps=config.log_every_n_steps,
     )
+    print(f"logging to {config.output_dir}")
     trainer.callbacks.append(CheckpointEveryEpoch())
     trainer.fit(model, train_loader)
 

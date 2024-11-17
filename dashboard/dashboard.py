@@ -1,4 +1,6 @@
 import typing as T
+from collections import Counter
+from dataclasses import replace
 from pathlib import Path
 
 import cv2
@@ -8,10 +10,14 @@ from config.config import Config
 from dataset.dataset import CoralDataset
 from dataset.dataset import Sample
 from model.model import CoralModel
+from util.constants import Split
 from util.image_util import numpy_from_torch
 
 st.set_page_config(layout="wide")
 st.title("Coral Dashboard")
+
+THICKNESS = 2
+COUNT = 5
 
 
 def get_checkpoint_path(model_path: str) -> Path | None:
@@ -34,11 +40,14 @@ class CoralDashboard:
     def __init__(self):
         self.config = Config()
         self.data_path = ""
-        self.num_cols = 18
+        self.num_cols = 5
         self.num_samples = -1
         self.model_path = ""
         self.col_idx = -1
         self.setting_col_idx = -1
+        self.start_idx = 0
+        self.stride = 1
+        self.split: Split = "train"
         self.model: CoralModel | None = None
 
     def run(self) -> None:
@@ -52,13 +61,35 @@ class CoralDashboard:
             return None
         model = CoralModel.load_from_checkpoint(checkpoint_path, config=self.config)
         model.eval()
+        model = model.cpu()
         return model
+
+    def get_sample_indices(self) -> T.Any:
+        stop_idx = self.num_samples * self.stride
+        for i in range(self.start_idx, stop_idx, self.stride):
+            if i >= len(self.dataset):
+                return
+            yield i
 
     def display_samples(self) -> None:
         cols = st.columns(self.num_cols)
-        for i in range(self.num_samples):
-            sample_dict = self.dataset[i]
+        # for i in self.get_sample_indices():
+
+        # seen = set()
+        seen = Counter()
+        st.text(len(self.dataset.sample_paths))
+        for sample_path in self.dataset.sample_paths:
+            name = sample_path.parent.name
+            if seen.get(name, 0) >= COUNT:
+                continue
+            # if name in seen:
+            # continue
+            # sample_dict = self.dataset[i]
+            sample_dict = self.dataset.load_path(sample_path)
             sample = Sample.from_dict(sample_dict)
+            if not sample.mask.any():
+                continue
+            seen[name] += 1
             with cols[self.next_col_idx()]:
                 self.display_sample(sample)
                 if self.model:
@@ -66,7 +97,8 @@ class CoralDashboard:
 
     def display_output(self, sample: Sample) -> None:
         pred = self.model.get_pred(sample.image)
-        sample = Sample(image=sample.image, mask=pred)
+        sample = Sample(image=sample.image, mask=pred, path=sample.path)
+        sample = replace(sample, mask=pred)
         self.display_sample(sample)
 
     def settings(self) -> None:
@@ -75,7 +107,15 @@ class CoralDashboard:
             self.create_param(st.text_input, "data_path")
             if self.data_path:
                 self.config.data_dir = self.data_path
+        with cols[self.next_setting_col_idx()]:
+            options: T.List[Split] = ["train", "val", "test"]
+            self.create_param(st.selectbox, "split", options=options)
+        self.config.split = self.split
         self.dataset = CoralDataset(self.config)
+        with cols[self.next_setting_col_idx()]:
+            self.create_param(st.number_input, "start_idx", min_value=0)
+        with cols[self.next_setting_col_idx()]:
+            self.create_param(st.number_input, "stride", min_value=1)
         with cols[self.next_setting_col_idx()]:
             self.create_param(st.number_input, "num_cols", min_value=1)
         with cols[self.next_setting_col_idx()]:
@@ -87,7 +127,6 @@ class CoralDashboard:
             )
             if self.num_samples == -1:
                 self.num_samples = len(self.dataset)
-        # with cols[self.next_setting_col_idx()]:
         self.create_param(st.text_input, "model_path")
 
     def next_setting_col_idx(self) -> int:
@@ -105,7 +144,12 @@ class CoralDashboard:
         if name in st.query_params:
             init_value = type(init_value)(st.query_params[name])
 
-        param = widget(label=name, value=init_value, **kwargs)
+        if "options" in kwargs:
+            kwargs["index"] = kwargs["options"].index(init_value)
+        else:
+            kwargs["value"] = init_value
+
+        param = widget(label=name, **kwargs)
         setattr(self, name, param)
         st.query_params[name] = param
 
@@ -123,9 +167,16 @@ class CoralDashboard:
             cv2.CHAIN_APPROX_SIMPLE,
         )
         image_np = numpy_from_torch(sample.image)
-        cv2.drawContours(image_np, contours, -1, (0, 255, 0), 1)
+        cv2.drawContours(image_np, contours, -1, (0, 255, 0), thickness=THICKNESS)
+        space = " " * 100 + "."
+        st.text(
+            f"{Path(sample.path).parents[1].name} | {Path(sample.path).parent.name}"
+            + space,
+            help=f"""```
+            {sample.path}""",
+        )
         st.image(image_np)
-        st.image(mask)
+        # st.image(mask)
 
 
 if __name__ == "__main__":

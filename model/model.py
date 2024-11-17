@@ -1,3 +1,5 @@
+import typing as T
+
 import pytorch_lightning as pl
 import torch
 from config.config import Config
@@ -30,6 +32,12 @@ class CoralModel(pl.LightningModule):
         if ndim == 3:
             pred = pred.squeeze(0)
         return pred.to(orig_device).detach()
+
+    #    def train_dataloader(self) -> T.Any:
+    #        indices = torch.randperm(len(self.dataset)).tolist()[:self.config.subset_length]
+    #        sampler = SubsetRandomSampler(indices)
+    #        return DataLoader(self.dataset)
+    #
 
     def training_step(self, data_blob: dict, batch_idx: int) -> torch.Tensor:
         sample = Sample.from_dict(data_blob)

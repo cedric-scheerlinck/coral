@@ -5,7 +5,7 @@ from pathlib import Path
 from util.constants import Split
 
 Pathlike = T.Union[str, Path]
-DATA_DIR = "/media/cedric/Storage1/coral_data/dataset"
+DATA_DIR = "/media/cedric/Storage1/coral_data/dataset_full"
 
 
 @dataclass
