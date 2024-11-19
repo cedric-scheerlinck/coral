@@ -5,7 +5,7 @@ from pathlib import Path
 from util.constants import Split
 
 Pathlike = T.Union[str, Path]
-DATA_DIR = "/media/cedric/Storage1/coral_data/dataset_full"
+DATA_DIR = Path("~/coral/dataset_full").expanduser()
 
 
 @dataclass
@@ -22,3 +22,4 @@ class Config:
     num_workers: int = 4
     log_every_n_steps: int = 100
     log_images_every_n_steps: int = 1000
+    restore_training: bool = False

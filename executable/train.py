@@ -3,6 +3,7 @@ from util.disable_multithreading import disable_multithreading
 
 disable_multithreading()
 
+import os
 from pathlib import Path
 
 import pytorch_lightning as pl
@@ -42,9 +43,17 @@ def main(config: Config) -> None:
         default_root_dir=config.output_dir,
         log_every_n_steps=config.log_every_n_steps,
     )
-    print(f"logging to {config.output_dir}")
+    kwargs = {}
+
+    if config.restore_training:
+        checkpoints = Path(config.output_dir).glob("**/*.ckpt")
+        if not checkpoints:
+            return
+        kwargs["ckpt_path"] = max(checkpoints, key=os.path.getmtime)
+
+    print(f"logging to {trainer.log_dir}")
     trainer.callbacks.append(CheckpointEveryEpoch())
-    trainer.fit(model, train_loader)
+    trainer.fit(model, train_loader, **kwargs)
 
 
 if __name__ == "__main__":
