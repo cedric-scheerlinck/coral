@@ -1,5 +1,3 @@
-import typing as T
-
 import pytorch_lightning as pl
 import torch
 from config.config import Config

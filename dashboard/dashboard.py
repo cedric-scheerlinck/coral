@@ -16,9 +16,6 @@ from util.image_util import numpy_from_torch
 st.set_page_config(layout="wide")
 st.title("Coral Dashboard")
 
-THICKNESS = 2
-COUNT = 5
-
 
 def get_checkpoint_path(model_path: str) -> Path | None:
     if not model_path:
@@ -42,6 +39,8 @@ class CoralDashboard:
         self.data_path = ""
         self.num_cols = 5
         self.num_samples = -1
+        self.num_samples_per_tile = 5
+        self.line_thickness = 2
         self.model_path = ""
         self.col_idx = -1
         self.setting_col_idx = -1
@@ -73,18 +72,12 @@ class CoralDashboard:
 
     def display_samples(self) -> None:
         cols = st.columns(self.num_cols)
-        # for i in self.get_sample_indices():
-
-        # seen = set()
         seen = Counter()
         st.text(len(self.dataset.sample_paths))
         for sample_path in self.dataset.sample_paths:
             name = sample_path.parent.name
-            if seen.get(name, 0) >= COUNT:
+            if seen[name] >= self.num_samples_per_tile:
                 continue
-            # if name in seen:
-            # continue
-            # sample_dict = self.dataset[i]
             sample_dict = self.dataset.load_path(sample_path)
             sample = Sample.from_dict(sample_dict)
             if not sample.mask.any():
@@ -118,6 +111,10 @@ class CoralDashboard:
             self.create_param(st.number_input, "stride", min_value=1)
         with cols[self.next_setting_col_idx()]:
             self.create_param(st.number_input, "num_cols", min_value=1)
+        with cols[self.next_setting_col_idx()]:
+            self.create_param(st.number_input, "num_samples_per_tile", min_value=1)
+        with cols[self.next_setting_col_idx()]:
+            self.create_param(st.number_input, "line_thickness", min_value=1)
         with cols[self.next_setting_col_idx()]:
             self.create_param(
                 st.number_input,
@@ -167,7 +164,9 @@ class CoralDashboard:
             cv2.CHAIN_APPROX_SIMPLE,
         )
         image_np = numpy_from_torch(sample.image)
-        cv2.drawContours(image_np, contours, -1, (0, 255, 0), thickness=THICKNESS)
+        cv2.drawContours(
+            image_np, contours, -1, (0, 255, 0), thickness=self.line_thickness
+        )
         space = " " * 100 + "."
         st.text(
             f"{Path(sample.path).parents[1].name} | {Path(sample.path).parent.name}"
@@ -176,7 +175,6 @@ class CoralDashboard:
             {sample.path}""",
         )
         st.image(image_np)
-        # st.image(mask)
 
 
 if __name__ == "__main__":
