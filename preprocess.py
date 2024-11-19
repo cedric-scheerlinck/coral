@@ -11,6 +11,8 @@ from tqdm import tqdm
 
 ROTATE = {
     "T1_22.12.06.tif": cv2.ROTATE_90_COUNTERCLOCKWISE,
+    "T1_22.12.13a.tif": cv2.ROTATE_90_CLOCKWISE,
+    "T1_22.12.19a.tif": cv2.ROTATE_90_CLOCKWISE,
 }
 
 SKIP = {"T10_tp1_06.12.23.tif", "T17_tp4_02.01.23.tif", "T18_tp7_24.01.23.tif"}
