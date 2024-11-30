@@ -1,3 +1,4 @@
+import typing as T
 from pathlib import Path
 
 import argh
@@ -9,7 +10,7 @@ from config.config import Config
 from model.model import CoralModel
 
 Pathlike = Path | str
-DEFAULT_SIZE = 1024
+DEFAULT_SIZE = 2048
 
 
 def main(model_path: Pathlike, image_path: Pathlike, size: int = DEFAULT_SIZE) -> None:
@@ -49,14 +50,24 @@ def main(model_path: Pathlike, image_path: Pathlike, size: int = DEFAULT_SIZE) -
 
 
 def save_pred(
-    image_path: Pathlike, pred: np.ndarray, chunk: np.ndarray, idx: int
+    image_path: Pathlike,
+    pred: np.ndarray,
+    image: np.ndarray,
+    idx: int,
+    color: T.Tuple[int, int, int] = (0, 255, 0),
+    thickness: int = 2,
 ) -> None:
-    pred = ((pred < 0.5) * 255).clip(min=127)
     output_path = image_path.parent / "pred" / f"{image_path.stem}_{idx:05d}.png"
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    chunk = cv2.cvtColor(chunk, cv2.COLOR_RGB2BGR)
-    stacked = np.concatenate([chunk, pred[..., None]], axis=-1)
-    cv2.imwrite(str(output_path), stacked)
+    contours, _ = cv2.findContours(
+        (pred.squeeze() > 0.5).astype(np.uint8),
+        cv2.RETR_TREE,
+        cv2.CHAIN_APPROX_SIMPLE,
+    )
+    image = image.copy()
+    cv2.drawContours(image, contours, -1, color, thickness=thickness)
+    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+    cv2.imwrite(str(output_path), image)
     print(f"Saved prediction to {output_path}")
 
 

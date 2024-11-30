@@ -2,7 +2,8 @@ import pytorch_lightning as pl
 import torch
 from config.config import Config
 from dataset.dataset import Sample
-from loss.loss import BCELoss, DiceLoss
+from loss.loss import BCELoss
+from loss.loss import DiceLoss
 from network.network import UNet
 from util.image_util import resize
 
