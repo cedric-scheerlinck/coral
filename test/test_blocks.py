@@ -1,9 +1,6 @@
 import pytest
 import torch
-from network.blocks import DownResBlock
-from network.blocks import ResBlock
-from network.blocks import UpResBlock
-from network.blocks import conv_bn
+from network.blocks import DownResBlock, ResBlock, UpResBlock, conv_bn
 
 # Global constants
 BATCH_SIZE = 2

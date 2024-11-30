@@ -2,8 +2,7 @@ import pytorch_lightning as pl
 import torch
 from config.config import Config
 from dataset.dataset import Sample
-from loss.loss import BCELoss
-from loss.loss import DiceLoss
+from loss.loss import BCELoss, DiceLoss
 from network.network import UNet
 from util.image_util import resize
 
@@ -16,6 +15,9 @@ class CoralModel(pl.LightningModule):
         self.config = config
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        x: [..., C, H, W], [0.0, 1.0] float input image.
+        """
         return self.network(x)
 
     def get_pred(self, image: torch.Tensor) -> torch.Tensor:

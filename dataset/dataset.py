@@ -1,6 +1,5 @@
 import typing as T
-from dataclasses import asdict
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Self
 

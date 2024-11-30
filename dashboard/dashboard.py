@@ -7,8 +7,7 @@ import cv2
 import numpy as np
 import streamlit as st
 from config.config import Config
-from dataset.dataset import CoralDataset
-from dataset.dataset import Sample
+from dataset.dataset import CoralDataset, Sample
 from model.model import CoralModel
 from util.constants import Split
 from util.image_util import numpy_from_torch

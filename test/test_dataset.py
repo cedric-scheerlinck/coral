@@ -3,8 +3,7 @@ from pathlib import Path
 import pytest
 import torch
 from config.config import Config
-from dataset.dataset import CoralDataset
-from dataset.dataset import Sample
+from dataset.dataset import CoralDataset, Sample
 
 
 @pytest.fixture

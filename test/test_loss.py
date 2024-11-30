@@ -1,7 +1,6 @@
 import pytest
 import torch
-from loss.loss import BCELoss
-from loss.loss import DiceLoss
+from loss.loss import BCELoss, DiceLoss
 
 BATCH_SIZE = 2
 CHANNELS = 1

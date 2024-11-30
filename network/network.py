@@ -1,8 +1,7 @@
 import torch
 import torch.nn as nn
 
-from network.blocks import DownResBlock
-from network.blocks import UpResBlock
+from network.blocks import DownResBlock, UpResBlock
 
 
 class UNet(nn.Module):
